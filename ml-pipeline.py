@@ -11,6 +11,7 @@ from nltk.stem.wordnet import WordNetLemmatizer
 from luigi import six
 from sklearn.decomposition import NMF
 from sklearn.feature_extraction.text import CountVectorizer
+# from myTasks import Tokenization
 
 def read_input(input):
   X, y = [], []
@@ -55,7 +56,8 @@ class Tokenization(luigi.Task):
         compute the task dependency graph.
         """
         #ipdb.set_trace()
-        return [ InputText(self.input_dir + '/' + filename) for filename in listdir(self.input_dir) ]
+        return [ InputText(self.input_dir + '/' + filename) 
+                for filename in listdir(self.input_dir) ]
 
     def output(self):
         """
@@ -77,6 +79,8 @@ class Tokenization(luigi.Task):
         wordnet = WordNetLemmatizer()
 
         docs = []
+
+        #ipdb.set_trace()
 
         for f in self.input(): # The input() method is a wrapper around requires() that returns Target objects
             lines = 0
@@ -187,7 +191,8 @@ class BuildModels(luigi.Task):
     num_topics = luigi.IntParameter(default=1)
 
     def requires(self):
-        return [TrainClassifier(self.input_dir, self.lam), TopicModel(self.input_dir, self.num_topics)]
+        return [TrainClassifier(self.input_dir, self.lam),
+                TopicModel(self.input_dir, self.num_topics)]
 
 if __name__ == '__main__':
     luigi.run()
