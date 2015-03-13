@@ -136,7 +136,7 @@ class Vectorize(luigi.Task):
 ## Train (and serialize) Model
 class TrainClassifier(luigi.Task):
   input_dir = luigi.Parameter()
-  lam = luigi.FloatParameter(default=1)
+  lam = luigi.FloatParameter(default=1.0)
 
   def requires(self):
     return Vectorize(self.input_dir)
@@ -159,14 +159,14 @@ class TrainClassifier(luigi.Task):
     f.close()
 
   def output(self):
-    return luigi.LocalTarget('models/model-alpha-%d.pickle' % self.lam)
+    return luigi.LocalTarget('models/model-alpha-%.2f.pickle' % self.lam)
 
 # Offshoots
 
 ## Build Topic Models
 class TopicModel(luigi.Task):
   input_dir = luigi.Parameter()
-  num_topics = luigi.IntParameter(default=1)
+  num_topics = luigi.IntParameter(default=10)
 
   def requires(self):
     return Vectorize(self.input_dir)
@@ -190,8 +190,8 @@ class TopicModel(luigi.Task):
 
 class BuildModels(luigi.Task):
     input_dir = luigi.Parameter()
-    lam = luigi.FloatParameter(default=1)
-    num_topics = luigi.IntParameter(default=1)
+    lam = luigi.FloatParameter(default=1.0)
+    num_topics = luigi.IntParameter(default=10)
 
     def requires(self):
         return [TrainClassifier(self.input_dir, self.lam),

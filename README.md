@@ -4,21 +4,23 @@ This repository contains the files and data from a workshop at PARISOMA well as 
 
 I would love your feedback on the materials in the Github [issues](https://github.com/Jay-Oh-eN/data-engineering-101/issues).  And/or please do not hesitate to reach out to me directly via email at jonathan@galvanize.it or over twitter @clearspandex
 
+The presentation can be found on Slideshare [here](http://www.slideshare.net/jonathandinu/presentation-45784222) or in this repository (`presentation.pdf`).
+
 ![](images/luigiflow.png)
 
 > Throughout this workshop, you will learn how to make a scalable and sustainable data pipeline in Python with Luigi
 
 ## Getting Started
 
-0. Install Python, I recommend Anaconda (Mac OSX and Windows): [http://continuum.io/downloads](http://continuum.io/downloads)
-1. Get the files: Download the [ZIP](https://github.com/Jay-Oh-eN/data-engineering-101/archive/master.zip) or `git clone https://github.com/Jay-Oh-eN/data-engineering-101` (git [tutorial][gitit]) this repository.
+0. Install Python, I recommend Anaconda (Mac OSX or Windows): [http://continuum.io/downloads](http://continuum.io/downloads)
+1. Get the files: Download the [ZIP](https://github.com/Jay-Oh-eN/data-engineering-101/archive/master.zip) or `git clone https://github.com/Jay-Oh-eN/data-engineering-101` (git [tutorial](http://jlord.us/git-it/)) this repository.
 
 ### Run the Code
 
 1. Install libraries and dependencies: `pip install -r requirements.txt`
 2. Start the UI server: `luigid --background  --logdir logs`
-3. Navigate with a web browser to `http://localhost:[port]` where [port] is the port the `luigid` server has started on (`luigid` defaults to port 8082)
-4. Run the final pipeline (with parallelism of 4): `python ml-pipeline.py --workers 4 BuildModels --input-dir text --num-topics 10 --lam 0.8`
+3. Navigate with a web browser to `http://localhost:[port]` where `[port]` is the port the `luigid` server has started on (`luigid` defaults to port 8082)
+4. Run the final pipeline: `python ml-pipeline.py BuildModels --input-dir text --num-topics 10 --lam 0.8`
 
 ### Libraries Used
 * [luigi](http://luigi.readthedocs.org/en/latest/index.html)
@@ -28,10 +30,10 @@ I would love your feedback on the materials in the Github [issues](https://githu
 
 ### Whats in here?
 
-    text/                   20newsgroup text files
+    text/                   20newsgroups text files
     example_luigi.py        example scaffold of a luigi pipeline
     hadoop_word_count.py    example luigi pipeline using Hadoop
-    ml-pipeline             luigi pipeline covered in workshop
+    ml-pipeline.py          luigi pipeline covered in workshop
     LICENSE                 Details of rights of use and distribution
     presentation.pdf        lecture slides from presentation
     readme.md               this file!
@@ -57,6 +59,7 @@ The data (in the `text/` folder) is from the [20 newsgroups](http://qwone.com/~j
 ## Resources/References
 
 * [Questioning the Lambda Architecture](http://radar.oreilly.com/2014/07/questioning-the-lambda-architecture.html)
+* [Luigi: NYC Data Science Meetup](http://www.slideshare.net/erikbern/luigi-presentation-nyc-data-science)
 * [The Log: What every software engineer should know about real-time data's unifying abstraction](http://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying)
 * [I (heart) Log](http://www.slideshare.net/JayKreps1/i-32858698)
 * [Why Loggly Loves Apache Kafka](https://www.loggly.com/blog/loggly-loves-apache-kafka-use-unbreakable-messaging-better-log-management/)
