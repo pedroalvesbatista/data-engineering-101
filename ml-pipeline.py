@@ -1,6 +1,7 @@
 import luigi
 import ipdb
 import pickle
+import inspect, os
 from os import listdir
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -41,7 +42,9 @@ class InputText(luigi.ExternalTask):
         :return: the target output for this task.
         :rtype: object (:py:class:`luigi.target.Target`)
         """
-        root = '/Users/jonathandinu/Repositories/workshopper/data-engineering-101/'
+
+        # The directory containing this file
+        root = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + "/"
         return luigi.LocalTarget(root + self.filename)
 
 ## Tokenize Data
