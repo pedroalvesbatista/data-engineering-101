@@ -1,8 +1,9 @@
 import luigi
-import ipdb
+#import ipdb
 import pickle
 import inspect, os
 from os import listdir
+import numpy as np
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.tokenize import RegexpTokenizer
@@ -12,6 +13,9 @@ from nltk.stem.wordnet import WordNetLemmatizer
 from luigi import six
 from sklearn.decomposition import NMF
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.cross_validation import train_test_split
+
 # from myTasks import Tokenization
 
 def read_input(input):
@@ -137,29 +141,69 @@ class Vectorize(luigi.Task):
 class TrainClassifier(luigi.Task):
   input_dir = luigi.Parameter()
   lam = luigi.FloatParameter(default=1.0)
+  evaluate = luigi.BoolParameter(default=False)
 
   def requires(self):
     return Vectorize(self.input_dir)
 
   def run(self):
-    from sklearn.naive_bayes import MultinomialNB
-
     corpus, vect, lab = self.input()
     
     # deserialize inputs
     vectorizer = pickle.load(vect.open('r'))
     X = pickle.load(corpus.open('r'))
-    labels = lab.open('r').read().split(',')
+    y = lab.open('r').read().split(',')
+
+    if evaluate:
+        X, X_test, y, y_test = train_test_split(X, labels, test_size=.4)
+
+        # output test/train splits
+        xt = self.output()[1].open('w')
+        yt = self.output()[2].open('w')
+        
+        pickle.dump(X_test, xt)
+        pickle.dump(y_test, yt)
+        xt.close()
+        yt.close()
 
     c = MultinomialNB(alpha=self.lam)
-    c.fit(X, labels)
+    c.fit(X, y)
 
-    f = self.output().open('w')
+    f = self.output()[0].open('w')
     pickle.dump(c, f)
     f.close()
 
   def output(self):
-    return luigi.LocalTarget('models/model-alpha-%.2f.pickle' % self.lam)
+    targets = [luigi.LocalTarget('models/model-alpha-%.2f.pickle' % self.lam)]
+
+    if evaluate:
+        targets.append(luigi.LocalTarget('models/x-test-%.2f.pickle' % self.lam))
+        targets.append(luigi.LocalTarget('models/y-test-%.2f.pickle' % self.lam))
+
+    return targets
+
+class EvaluateModel(luigi.Task):
+    input_dir = luigi.Parameter()
+    lam = luigi.FloatParameter(default=1.0)
+
+    def requires(self):
+        return TrainClassifier(self.input_dir, self.lam, True)
+
+    def run(self):
+        model = pickle.load(self.input()[0].open('r'))
+        X_test = pickle.load(self.input()[1].open('r'))
+        y_test = pickle.load(self.input()[2].open('r'))
+
+        probabilities = model.predict_proba(X_test)
+
+        out = zip(y_test, probabilities)
+
+        f = self.output()[0].open('w')
+        np.savetxt(f, out, delimiter='\t')
+        f.close()
+
+    def output(self):
+        luigi.LocalTarget('data/nb-alpha-%.2f/scores.tsv' % model.alpha)
 
 # Offshoots
 
@@ -187,6 +231,29 @@ class TopicModel(luigi.Task):
 
   def output(self):
     return luigi.LocalTarget('models/model-topic-%d.pickle' % self.num_topics)
+
+class DeployModels(luigiTask):
+    '''
+    A Task that packages a model as an API and deploys the specified models 
+    to a cloud service.
+    '''
+    input_dir = luigi.Parameter()
+    lam = luigi.FloatParameter(default=1.0)
+
+    def requires(self):
+        TrainClassifier(self.input_dir, self.lam, False)
+
+    def run(self):
+        import shutil
+
+        files = {'file': open(self.input(), 'rb')}
+        requests.post('http://localhost:8081/refresh', files=files)
+        
+        shutil.copy2(self.input(), self.output())
+
+    def output(self):
+        luigi.LocalTarget('deployed' % self.lam)
+
 
 class BuildModels(luigi.Task):
     input_dir = luigi.Parameter()

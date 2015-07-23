@@ -1,3 +1,10 @@
+## TODO
+
+1. build docker image
+2. build final result
+3. have git tags to checkout
+4. instructions as a Github pages repo
+
 # Data Engineering 101: Building a Data Pipeline
 
 This repository contains the files and data from a workshop at PARISOMA well as resources around Data Engineering.
@@ -10,6 +17,47 @@ The presentation can be found on Slideshare [here](http://www.slideshare.net/jon
 
 > Throughout this workshop, you will learn how to make a scalable and sustainable data pipeline in Python with Luigi
 
+## Learning Objectives
+
+* Run a simple 1 stage Luigi flow reading/writing to local files
+* Write a Luigi flow containing stages with multiple dependencies
+    * Visualize the progress of the flow using the centralized scheduler
+    * Parameterize the flow from the command line
+    * Output parameter specific output files
+* Manage serialization to/from a Postgres database
+* Integrate a Hadoop Map/Reduce task into an existing flow
+* Parallelize non-dependent stages of a multi-stage Luigi flow
+* Schedule a local Luigi job to run once every day
+* Run any arbitrary shell command in a repeatable way
+
+## Prerequisites
+
+0. Install Python, I recommend Anaconda (Mac OSX or Windows): [http://continuum.io/downloads](http://continuum.io/downloads)
+1. Get the files: Download the [ZIP](https://github.com/Jay-Oh-eN/data-engineering-101/archive/master.zip) or `git clone https://github.com/Jay-Oh-eN/data-engineering-101` (git [tutorial](http://jlord.us/git-it/)) this repository.
+
+* Text Editor: I recommend [Sublime Text][sublime]
+* A (modern) Web Browser: I recommend [Google Chrome][chrome]
+* Docker: download [Kinematic](https://kitematic.com/)
+*
+*
+
+## Schedule
+
+| Time | Activity |
+| :--:| :--: |
+| 1:00-1:10| Components of Data pipelines (Lecture) |
+| 1:10-1:20| What and Why Luigi (Lecture) |
+| 1:20-1:40| The Smallest (1 stage) pipeline (Live Code) |
+| 1:25-1:40| The Smallest (1 stage) pipeline (Lab) |
+| 1:25-1:40| The Smallest (1 stage) pipeline (Solution) |
+Managing dependencies in a pipeline (10min)
+Lab: Multi-stage pipeline and introduction to the Luigi Visualizer (15min)
+Serialization in a Data Pipeline (10min)
+Lab: Integrating your pipeline with HDFS and Postgres (20min)
+Scheduling (10min)
+Lab: Parallelism and recurring jobs with Luigi (20min)
+Wrap up and next steps (5min)
+
 ## Getting Started
 
 0. Install Python, I recommend Anaconda (Mac OSX or Windows): [http://continuum.io/downloads](http://continuum.io/downloads)
@@ -17,10 +65,25 @@ The presentation can be found on Slideshare [here](http://www.slideshare.net/jon
 
 ### Run the Code
 
+1. Hadoop Docker (with script to transfer files `upload-data.sh`)
+2. Luigi Client Docker
+    * `luigid --background --logdir logs`
+    * `python ml-pipeline.py BuildModels --input-dir text --num-topics 10 --lam 0.8`
+
+#### Local
+
 1. Install libraries and dependencies: `pip install -r requirements.txt`
-2. Start the UI server: `luigid --background  --logdir logs`
+2. Start the UI server: `luigid --background --logdir logs`
 3. Navigate with a web browser to `http://localhost:[port]` where `[port]` is the port the `luigid` server has started on (`luigid` defaults to port 8082)
 4. Run the final pipeline: `python ml-pipeline.py BuildModels --input-dir text --num-topics 10 --lam 0.8`
+
+#### Hadoop
+
+1. Start Hadoop cluster: `bin/start-dfs.sh; sbin/start-yarn.sh`
+2. Setup Directory Structure: `hadoop fs -mkdir /tmp/text`
+3. Get files on cluster: `hadoop fs -put ./data/text /tmp/text`
+4. Retrieve results: `hadoop fs -getmerge /tmp/text-count/2012-06-01 ./counts.txt`
+5. View results: `head ./counts.txt`
 
 ### Libraries Used
 * [luigi](http://luigi.readthedocs.org/en/latest/index.html)
