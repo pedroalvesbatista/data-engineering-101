@@ -1,5 +1,4 @@
 import luigi
-import ipdb
 import csv
 import pickle
 import inspect, os
@@ -47,7 +46,6 @@ class Vectorize(luigi.Task):
         labels = []
 
         vectorizer = TfidfVectorizer()
-
 
         for f in self.input(): # The input() method is a wrapper around requires() that returns Target objects
             with f.open('r') as fh:
@@ -135,7 +133,7 @@ class EvaluateModel(luigi.Task):
         vectorizer = pickle.load(self.input()[1][1].open('r'))
 
         probabilities = model.predict_proba(vectorizer.transform(X_test))
-        pr = np.where(y_test == y_test[1], 1, 0)
+        pr = np.where(y_test == y_test[1], 0, 1)
         
         out = zip(pr, probabilities[:,0])
 

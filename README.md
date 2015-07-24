@@ -1,8 +1,8 @@
 # Data Engineering 101: Building a Data Pipeline
 
-This repository contains the files and data from the workshop as well as resources around Data Engineering.
+This repository contains the files and data from the workshop as well as resources around Data Engineering. For the workshop (and after) we will use a [Gitter](http://gitter.im) chatroom to keep the conversation going: [https://gitter.im/Jay-Oh-eN/data-engineering-101](https://gitter.im/Jay-Oh-eN/data-engineering-101).
 
-For the workshop (and after) we will use a [Gitter](http://gitter.im) chatroom to keep the conversation going: [https://gitter.im/Jay-Oh-eN/data-engineering-101](https://gitter.im/Jay-Oh-eN/data-engineering-101).  And/or please do not hesitate to reach out to me directly via email at jonathan@galvanize.com or over twitter @clearspandex
+And/or please do not hesitate to reach out to me directly via email at jonathan@galvanize.com or over twitter @clearspandex
 
 The presentation can be found on Slideshare [here](http://www.slideshare.net/jonathandinu/presentation-45784222) or in this repository (`presentation.pdf`).
 
@@ -36,37 +36,18 @@ Prior experience with Python and the scientific Python stack is beneficial.  The
 0. Install Docker and get the images.  Instructions can be found [here](https://gist.github.com/Jay-Oh-eN/02cdd0a45494f3e4c32a).
 1. Get the files: Download the [ZIP](https://github.com/Jay-Oh-eN/data-engineering-101/archive/master.zip) or `git clone https://github.com/Jay-Oh-eN/data-engineering-101` (git [tutorial](http://jlord.us/git-it/)) this repository.
 
-## Schedule
-
-| Time | Activity |
-| :--:| :--: |
-| 1:00-1:10| Components of Data pipelines (Lecture) |
-| 1:10-1:20| What and Why Luigi (Lecture) |
-| 1:20-1:40| The Smallest (1 stage) pipeline (Live Code) |
-| 1:25-1:40| The Smallest (1 stage) pipeline (Lab) |
-| 1:25-1:40| The Smallest (1 stage) pipeline (Solution) |
-Managing dependencies in a pipeline (10min)
-Lab: Multi-stage pipeline and introduction to the Luigi Visualizer (15min)
-Serialization in a Data Pipeline (10min)
-Lab: Integrating your pipeline with HDFS and Postgres (20min)
-Scheduling (10min)
-Lab: Parallelism and recurring jobs with Luigi (20min)
-Wrap up and next steps (5min)
-
 ### Run the Code
-
-1. Hadoop Docker (with script to transfer files `upload-data.sh`)
-2. Luigi Client Docker
-    * `luigid --background --logdir logs`
-    * `python ml-pipeline.py BuildModels --input-dir text --num-topics 10 --lam 0.8`
 
 #### Local
 
 1. Install libraries and dependencies: `pip install -r requirements.txt`
 2. Start the UI server: `luigid --background --logdir logs`
 3. Navigate with a web browser to `http://localhost:[port]` where `[port]` is the port the `luigid` server has started on (`luigid` defaults to port 8082)
-4. Run the final pipeline: `python ml-pipeline.py BuildModels --input-dir text --num-topics 10 --lam 0.8`
-5. Run evaluation server (at `localhost:9191`): `topmodel/topmodel_server.py`
+4. start the API Server: `python app.py`
+5. Evaluate Model: `python ml-pipeline.py EvaluateModel --input-dir text --lam 0.8`
+6. Run evaluation server (at `localhost:9191`): `topmodel/topmodel_server.py`
+7. Run the final pipeline: `python ml-pipeline.py BuildModels --input-dir text --num-topics 10 --lam 0.8`
+--
 
 **For parallelism, set `--workers` (note this is Task parallelism):**
 
@@ -80,6 +61,12 @@ Wrap up and next steps (5min)
 4. Retrieve results: `hadoop fs -getmerge /tmp/text-count/2012-06-01 ./counts.txt`
 5. View results: `head ./counts.txt`
 
+#### Flask
+
+1. `docker run -it -v /LOCAL/PATH/TO/REPO/data-engineering-101:/root/workshop clearspandex/pydata-seattle bash`
+2. `pip2 install flask`
+3. `ipython2 app.py`
+
 ### Libraries Used
 * [luigi](http://luigi.readthedocs.org/en/latest/index.html)
 * [scikit-learn](http://scikit-learn.org/stable/)
@@ -89,9 +76,11 @@ Wrap up and next steps (5min)
 ### Whats in here?
 
     text/                   20newsgroups text files
+    topmodel/               Stripe's topmodel evaluation library
     example_luigi.py        example scaffold of a luigi pipeline
     hadoop_word_count.py    example luigi pipeline using Hadoop
     ml-pipeline.py          luigi pipeline covered in workshop
+    app.py                  Flask server to deploy a scikit-learn model
     LICENSE                 Details of rights of use and distribution
     presentation.pdf        lecture slides from presentation
     readme.md               this file!
