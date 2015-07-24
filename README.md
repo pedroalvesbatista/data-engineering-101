@@ -1,15 +1,8 @@
-## TODO
-
-1. build docker image
-2. build final result
-3. have git tags to checkout
-4. instructions as a Github pages repo
-
 # Data Engineering 101: Building a Data Pipeline
 
-This repository contains the files and data from a workshop at PARISOMA well as resources around Data Engineering.
+This repository contains the files and data from the workshop as well as resources around Data Engineering.
 
-I would love your feedback on the materials in the Github [issues](https://github.com/Jay-Oh-eN/data-engineering-101/issues).  And/or please do not hesitate to reach out to me directly via email at jonathan@galvanize.it or over twitter @clearspandex
+For the workshop (and after) we will use a [Gitter](http://gitter.im) chatroom to keep the conversation going: [https://gitter.im/Jay-Oh-eN/data-engineering-101](https://gitter.im/Jay-Oh-eN/data-engineering-101).  And/or please do not hesitate to reach out to me directly via email at jonathan@galvanize.com or over twitter @clearspandex
 
 The presentation can be found on Slideshare [here](http://www.slideshare.net/jonathandinu/presentation-45784222) or in this repository (`presentation.pdf`).
 
@@ -32,14 +25,16 @@ The presentation can be found on Slideshare [here](http://www.slideshare.net/jon
 
 ## Prerequisites
 
-0. Install Python, I recommend Anaconda (Mac OSX or Windows): [http://continuum.io/downloads](http://continuum.io/downloads)
-1. Get the files: Download the [ZIP](https://github.com/Jay-Oh-eN/data-engineering-101/archive/master.zip) or `git clone https://github.com/Jay-Oh-eN/data-engineering-101` (git [tutorial](http://jlord.us/git-it/)) this repository.
+Prior experience with Python and the scientific Python stack is beneficial.  The workshop will focus on using the [Luigi](http://luigi.readthedocs.org/en/latest/index.html) framework, but will have code from the following lobraries as well:
 
-* Text Editor: I recommend [Sublime Text][sublime]
-* A (modern) Web Browser: I recommend [Google Chrome][chrome]
-* Docker: download [Kinematic](https://kitematic.com/)
-*
-*
+* numpy
+* scikit-learn
+* Flask
+
+## Setup
+
+0. Install Docker and get the images.  Instructions can be found [here](https://gist.github.com/Jay-Oh-eN/02cdd0a45494f3e4c32a).
+1. Get the files: Download the [ZIP](https://github.com/Jay-Oh-eN/data-engineering-101/archive/master.zip) or `git clone https://github.com/Jay-Oh-eN/data-engineering-101` (git [tutorial](http://jlord.us/git-it/)) this repository.
 
 ## Schedule
 
@@ -58,11 +53,6 @@ Scheduling (10min)
 Lab: Parallelism and recurring jobs with Luigi (20min)
 Wrap up and next steps (5min)
 
-## Getting Started
-
-0. Install Python, I recommend Anaconda (Mac OSX or Windows): [http://continuum.io/downloads](http://continuum.io/downloads)
-1. Get the files: Download the [ZIP](https://github.com/Jay-Oh-eN/data-engineering-101/archive/master.zip) or `git clone https://github.com/Jay-Oh-eN/data-engineering-101` (git [tutorial](http://jlord.us/git-it/)) this repository.
-
 ### Run the Code
 
 1. Hadoop Docker (with script to transfer files `upload-data.sh`)
@@ -76,6 +66,11 @@ Wrap up and next steps (5min)
 2. Start the UI server: `luigid --background --logdir logs`
 3. Navigate with a web browser to `http://localhost:[port]` where `[port]` is the port the `luigid` server has started on (`luigid` defaults to port 8082)
 4. Run the final pipeline: `python ml-pipeline.py BuildModels --input-dir text --num-topics 10 --lam 0.8`
+5. Run evaluation server (at `localhost:9191`): `topmodel/topmodel_server.py`
+
+**For parallelism, set `--workers` (note this is Task parallelism):**
+
+`python ml-pipeline.py BuildModels --input-dir text --num-topics 10 --lam 0.8 --workers 4`
 
 #### Hadoop
 
