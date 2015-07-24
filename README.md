@@ -47,6 +47,7 @@ Prior experience with Python and the scientific Python stack is beneficial.  The
 5. Evaluate Model: `python ml-pipeline.py EvaluateModel --input-dir text --lam 0.8`
 6. Run evaluation server (at `localhost:9191`): `topmodel/topmodel_server.py`
 7. Run the final pipeline: `python ml-pipeline.py BuildModels --input-dir text --num-topics 10 --lam 0.8`
+
 --
 
 **For parallelism, set `--workers` (note this is Task parallelism):**
