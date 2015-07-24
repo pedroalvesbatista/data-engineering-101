@@ -1,36 +1,17 @@
 import luigi
-#import ipdb
+import ipdb
+import csv
 import pickle
 import inspect, os
+import requests
 from os import listdir
 import numpy as np
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk.tokenize import RegexpTokenizer
-from nltk.stem.porter import PorterStemmer
-from nltk.stem.snowball import SnowballStemmer
-from nltk.stem.wordnet import WordNetLemmatizer
+import subprocess
 from luigi import six
 from sklearn.decomposition import NMF
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.cross_validation import train_test_split
-
-# from myTasks import Tokenization
-
-def read_input(input):
-  X, y = [], []
-  for line in input.open('r'):
-    items = line.strip().split(',')
-    X.append(items[1])
-    y.append(items[0])
-  return X, y
-
-# Scrape NYT API and put in Mongo
-
-# Acquire Data (web scraping) for date, load from mongo
-
-# Parse Article (Beautiful Soup) and store in mongo or as flat files
 
 # Load data from files
 class InputText(luigi.ExternalTask):
@@ -52,74 +33,38 @@ class InputText(luigi.ExternalTask):
         root = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))) + "/"
         return luigi.LocalTarget(root + self.filename)
 
-## Tokenize Data
-class Tokenization(luigi.Task):
-    input_dir = luigi.Parameter()
-
-    def requires(self):
-        """
-        Which other Tasks need to be complete before
-        this Task can start? Luigi will use this to 
-        compute the task dependency graph.
-        """
-        #ipdb.set_trace()
-        return [ InputText(self.input_dir + '/' + filename) 
-                for filename in listdir(self.input_dir) ]
-
-    def output(self):
-        """
-        When this Task is complete, where will it produce output?
-        Luigi will check whether this output (specified as a Target) 
-        exists to determine whether the Task needs to run at all.
-        """
-        
-        return luigi.LocalTarget(self.input_dir + '/tokenized.tsv')
-
-    def run(self):
-        """
-        How do I run this Task?
-        Luigi will call this method if the Task needs to be run.
-        """
-        # remove stop words and punctuation
-        stop = set(stopwords.words('english'))
-        tokenizer = RegexpTokenizer(r'\w+')
-        wordnet = WordNetLemmatizer()
-
-        docs = []
-
-        #ipdb.set_trace()
-
-        for f in self.input(): # The input() method is a wrapper around requires() that returns Target objects
-            lines = 0
-            words = []
-
-            for line in f.open('r'):
-                if lines == 0:
-                    label = line
-                    lines +=1
-                else:
-                    words.extend(tokenizer.tokenize(line))
-                    lines +=1
-
-            words_filtered = filtered_words = [wordnet.lemmatize(w) for w in words if not w in stopwords.words('english')]
-            docs.append((label, '\t'.join(words)))
-
-        out = self.output().open('w')
-        for label, tokens in docs:
-            out.write("%s,%s\n" % (label.strip(), tokens.strip()))
-        out.close()
-
-## Vectorize Data (stemming)
+## Vectorize Data
 class Vectorize(luigi.Task):
     input_dir = luigi.Parameter()
+    evaluate = luigi.BoolParameter(default=False)
 
     def requires(self):
-        return Tokenization(self.input_dir)
+        return [ InputText(self.input_dir + '/' + filename)
+                for filename in listdir(self.input_dir) ]
 
     def run(self):
-        corpus, labels = read_input(self.input())
+        corpus = []
+        labels = []
 
-        vectorizer = CountVectorizer(min_df=1)
+        vectorizer = TfidfVectorizer()
+
+        for f in self.input(): # The input() method is a wrapper around requires() that returns Target objects
+            with f.open('r') as fh:
+                labels.append(fh.readline().strip())
+                corpus.append(fh.read())
+
+        if self.evaluate:
+            corpus, X_test, labels, y_test = train_test_split(corpus, labels, test_size=.3)
+
+            # output test/train splits
+            xt = self.output()[3].open('w')
+            yt = self.output()[4].open('w')
+            
+            pickle.dump(X_test, xt)
+            pickle.dump(y_test, yt)
+            xt.close()
+            yt.close()
+
         X = vectorizer.fit_transform(corpus)
 
         fc = self.output()[0].open('w')
@@ -132,10 +77,19 @@ class Vectorize(luigi.Task):
         fv.close()
         fl.close()
 
+        files = {'filedata': self.output()[1].open()}
+        requests.post('http://0.0.0.0:8081/vectorizer', files=files)
+
     def output(self):
-        return [luigi.LocalTarget('models/corpus.pickle'),
-                luigi.LocalTarget('models/vectorizer.pickle'),
-                luigi.LocalTarget('models/labels.csv')]
+        targets = [luigi.LocalTarget('models/corpus.pickle'),
+                   luigi.LocalTarget('models/vectorizer.pickle'),
+                   luigi.LocalTarget('models/labels.csv')]
+
+        if self.evaluate:
+            targets.append(luigi.LocalTarget('models/x-test.pickle'))
+            targets.append(luigi.LocalTarget('models/y-test.pickle'))
+
+        return targets
 
 ## Train (and serialize) Model
 class TrainClassifier(luigi.Task):
@@ -144,66 +98,52 @@ class TrainClassifier(luigi.Task):
   evaluate = luigi.BoolParameter(default=False)
 
   def requires(self):
-    return Vectorize(self.input_dir)
+    return Vectorize(self.input_dir, True)
 
-  def run(self):
-    corpus, vect, lab = self.input()
-    
+  def run(self): 
     # deserialize inputs
-    vectorizer = pickle.load(vect.open('r'))
-    X = pickle.load(corpus.open('r'))
-    y = lab.open('r').read().split(',')
-
-    if evaluate:
-        X, X_test, y, y_test = train_test_split(X, labels, test_size=.4)
-
-        # output test/train splits
-        xt = self.output()[1].open('w')
-        yt = self.output()[2].open('w')
-        
-        pickle.dump(X_test, xt)
-        pickle.dump(y_test, yt)
-        xt.close()
-        yt.close()
-
+    vectorizer = pickle.load(self.input()[1].open('r'))
+    X = pickle.load(self.input()[0].open('r'))
+    y = self.input()[2].open('r').read().split(',')
     c = MultinomialNB(alpha=self.lam)
+
     c.fit(X, y)
 
-    f = self.output()[0].open('w')
+    f = self.output().open('w')
     pickle.dump(c, f)
     f.close()
 
   def output(self):
-    targets = [luigi.LocalTarget('models/model-alpha-%.2f.pickle' % self.lam)]
-
-    if evaluate:
-        targets.append(luigi.LocalTarget('models/x-test-%.2f.pickle' % self.lam))
-        targets.append(luigi.LocalTarget('models/y-test-%.2f.pickle' % self.lam))
-
-    return targets
+    return luigi.LocalTarget('models/model-alpha-%.2f.pickle' % self.lam)
 
 class EvaluateModel(luigi.Task):
     input_dir = luigi.Parameter()
     lam = luigi.FloatParameter(default=1.0)
 
     def requires(self):
-        return TrainClassifier(self.input_dir, self.lam, True)
+        return [TrainClassifier(self.input_dir, self.lam, True),
+                Vectorize(self.input_dir, True)]
 
     def run(self):
+        ipdb.set_trace()
         model = pickle.load(self.input()[0].open('r'))
-        X_test = pickle.load(self.input()[1].open('r'))
-        y_test = pickle.load(self.input()[2].open('r'))
+        X_test = pickle.load(self.input()[1][3].open('r'))
+        y_test = np.array(pickle.load(self.input()[1][4].open('r')))
 
-        probabilities = model.predict_proba(X_test)
+        vectorizer = pickle.load(self.input()[1][1].open('r'))
 
-        out = zip(y_test, probabilities)
+        probabilities = model.predict_proba(vectorizer.transform(X_test))
+        out = zip(y_test, probabilities[:,0])
 
-        f = self.output()[0].open('w')
-        np.savetxt(f, out, delimiter='\t')
+        f = self.output().open('w')
+        writer = csv.writer(f, delimiter='\t')
+        writer.writerow(('actual', 'pred_score'))
+        writer.writerows(out)
         f.close()
 
     def output(self):
-        luigi.LocalTarget('data/nb-alpha-%.2f/scores.tsv' % model.alpha)
+        # remember that you need to return from outputs() function
+        return luigi.LocalTarget('topmodel/data/nb-alpha-%.2f/scores.tsv' % self.lam)
 
 # Offshoots
 
@@ -232,7 +172,7 @@ class TopicModel(luigi.Task):
   def output(self):
     return luigi.LocalTarget('models/model-topic-%d.pickle' % self.num_topics)
 
-class DeployModels(luigiTask):
+class DeployModels(luigi.Task):
     '''
     A Task that packages a model as an API and deploys the specified models 
     to a cloud service.
@@ -246,14 +186,13 @@ class DeployModels(luigiTask):
     def run(self):
         import shutil
 
-        files = {'file': open(self.input(), 'rb')}
-        requests.post('http://localhost:8081/refresh', files=files)
-        
+        files = {'filedata': open(self.input(), 'rb')}
+
+        requests.post('http://0.0.0.0:8081/refresh', files=files)
         shutil.copy2(self.input(), self.output())
 
     def output(self):
         luigi.LocalTarget('deployed' % self.lam)
-
 
 class BuildModels(luigi.Task):
     input_dir = luigi.Parameter()
