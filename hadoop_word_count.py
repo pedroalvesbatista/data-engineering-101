@@ -18,7 +18,6 @@
 import luigi
 import luigi.hadoop
 import luigi.hdfs
-import ipdb
 
 # To make this run, you probably want to edit /etc/luigi/client.cfg and add something like:
 #
@@ -81,5 +80,4 @@ class WordCount(luigi.hadoop.JobTask):
         yield key, 1#values sum(map(int,values))
 
 if __name__ == '__main__':
-    ipdb.set_trace()
     luigi.run()

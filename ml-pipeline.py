@@ -48,10 +48,13 @@ class Vectorize(luigi.Task):
 
         vectorizer = TfidfVectorizer()
 
+
         for f in self.input(): # The input() method is a wrapper around requires() that returns Target objects
             with f.open('r') as fh:
                 labels.append(fh.readline().strip())
                 corpus.append(fh.read())
+
+        corpus, X_test, labels, y_test = train_test_split(corpus, labels, test_size=.3)
 
         if self.evaluate:
             corpus, X_test, labels, y_test = train_test_split(corpus, labels, test_size=.3)
@@ -125,7 +128,6 @@ class EvaluateModel(luigi.Task):
                 Vectorize(self.input_dir, True)]
 
     def run(self):
-        ipdb.set_trace()
         model = pickle.load(self.input()[0].open('r'))
         X_test = pickle.load(self.input()[1][3].open('r'))
         y_test = np.array(pickle.load(self.input()[1][4].open('r')))
@@ -133,7 +135,9 @@ class EvaluateModel(luigi.Task):
         vectorizer = pickle.load(self.input()[1][1].open('r'))
 
         probabilities = model.predict_proba(vectorizer.transform(X_test))
-        out = zip(y_test, probabilities[:,0])
+        pr = np.where(y_test == y_test[1], 1, 0)
+        
+        out = zip(pr, probabilities[:,0])
 
         f = self.output().open('w')
         writer = csv.writer(f, delimiter='\t')
@@ -181,18 +185,19 @@ class DeployModels(luigi.Task):
     lam = luigi.FloatParameter(default=1.0)
 
     def requires(self):
-        TrainClassifier(self.input_dir, self.lam, False)
+        return TrainClassifier(self.input_dir, self.lam, False)
 
     def run(self):
         import shutil
 
-        files = {'filedata': open(self.input(), 'rb')}
+        files = {'filedata': self.input().open()}
 
         requests.post('http://0.0.0.0:8081/refresh', files=files)
-        shutil.copy2(self.input(), self.output())
+
+        shutil.copy2(self.input().path, self.output().path)
 
     def output(self):
-        luigi.LocalTarget('deployed' % self.lam)
+        return luigi.LocalTarget('deployed/model-alpha-%.2f.pickle' % self.lam)
 
 class BuildModels(luigi.Task):
     input_dir = luigi.Parameter()
@@ -200,7 +205,7 @@ class BuildModels(luigi.Task):
     num_topics = luigi.IntParameter(default=10)
 
     def requires(self):
-        return [TrainClassifier(self.input_dir, self.lam),
+        return [TrainClassifier(self.input_dir, self.lam, False),
                 TopicModel(self.input_dir, self.num_topics)]
 
 if __name__ == '__main__':
