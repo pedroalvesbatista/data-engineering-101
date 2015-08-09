@@ -6,6 +6,8 @@ And/or please do not hesitate to reach out to me directly via email at jonathan@
 
 The presentation can be found on Slideshare [here](http://www.slideshare.net/jonathandinu/presentation-45784222) or in this repository (`presentation.pdf`).
 
+Video [here](https://www.youtube.com/watch?v=Ny2X_WNxrB4)
+
 ![](images/luigiflow.png)
 
 > Throughout this workshop, you will learn how to make a scalable and sustainable data pipeline in Python with Luigi
