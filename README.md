@@ -4,9 +4,7 @@ This repository contains the files and data from the workshop as well as resourc
 
 And/or please do not hesitate to reach out to me directly via email at jonathan@galvanize.com or over twitter @clearspandex
 
-The presentation can be found on Slideshare [here](http://www.slideshare.net/jonathandinu/presentation-45784222) or in this repository (`presentation.pdf`).
-
-Video [here](https://www.youtube.com/watch?v=Ny2X_WNxrB4)
+The presentation can be found on Slideshare [here](http://www.slideshare.net/jonathandinu/presentation-45784222) or in this repository (`presentation.pdf`). Video can be found [here](https://www.youtube.com/watch?v=Ny2X_WNxrB4).
 
 ![](images/luigiflow.png)
 
