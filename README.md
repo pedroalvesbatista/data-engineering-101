@@ -31,11 +31,6 @@ Prior experience with Python and the scientific Python stack is beneficial.  The
 * scikit-learn
 * Flask
 
-## Setup
-
-0. Install Docker and get the images.  Instructions can be found [here](https://gist.github.com/Jay-Oh-eN/02cdd0a45494f3e4c32a).
-1. Get the files: Download the [ZIP](https://github.com/Jay-Oh-eN/data-engineering-101/archive/master.zip) or `git clone https://github.com/Jay-Oh-eN/data-engineering-101` (git [tutorial](http://jlord.us/git-it/)) this repository.
-
 ### Run the Code
 
 #### Local
