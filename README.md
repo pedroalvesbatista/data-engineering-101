@@ -99,6 +99,18 @@ The data (in the `text/` folder) is from the [20 newsgroups](http://qwone.com/~j
 
     Thanx in advance,
 
+## Desired future achievements
+
+This tutorial, based on the thrived workshop, is a great starting point in Data Engineering, gathering all the basics regarding setting up a pipeline workflow with Luigi, containers, web app. Data Engineering involves a lot of steps, consisting of toolsets for each case. Having this in mind, I suggest add a couple more tools and cases to be explored, as well fundamental concepts used in Data Engineering and Big Data fields :
+
+* ETL (Extract, Transform and Load) process, consuming data from web pages or through an API (like that ones from Twitter)
+* Introduce parallel processing and in-memory transformations with Spark
+* Explore the mix of batch and streaming dataflow, with simple examples on Storm, Kafka, Hadoop, HBase and Cassandra (or another NoSQL flavor)
+* Prepare a not yet complete, but at least "ready to go" environment to pull really interesting data, use simple data mining algorithms on top of a data refinery hosted on different public clouds, with a little of monitoring, provisioning and configuration management
+* Increment the study cases with Airflow (a more complete full-batery workflow management tool)
+* Prepare the ground for exploring more advanced concepts in Systems Architecture, Engineering as well Data Architecture and Software Engineering with a bit of modeling and statistical approaches to systems 
+
+
 ## Resources/References
 
 * [Questioning the Lambda Architecture](http://radar.oreilly.com/2014/07/questioning-the-lambda-architecture.html)
